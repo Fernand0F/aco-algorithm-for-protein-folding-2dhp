@@ -1,5 +1,8 @@
 use crate::{aco::config::ACOConfig, conformation::Conformation, pheromones::Pheromones, protein::Protein};
 use colored::*;
+use rand::{rng, rngs::ThreadRng};
+// use rayon::iter::IntoParallelIterator;
+use rayon::prelude::*;
 
 pub mod config;
 
@@ -24,61 +27,49 @@ pub async fn aco_protein_folding_2dhp<'a>(
 
     for iteration in 0..config.max_iter {
         println!("\n{}", format!("====== Iteração {:>3}/{:>3} ======", iteration + 1, config.max_iter).bright_blue().bold());
-
-        let mut conformations = Vec::new();
         
-        for ant in 0..config.ant_count {
-            let mut conf = Conformation::new(protein, config); /* Cria nova conformação */
-    
-            while !conf.is_fully_grown() {
-                if !conf.grow(&pheromones) {
-                    conf.rewind();
+        let conformations_zip: Vec<_> = (0..config.ant_count).into_par_iter()
+            .map(|_| {
+                let mut conf = Conformation::new(protein, config); /* Cria nova conformação */
+                let mut rng = rng();
+
+                while !conf.is_fully_grown() {
+                    if !conf.grow(&pheromones, &mut rng) {
+                        conf.rewind();
+                    }
                 }
+                
+                // Tenta melhorar solução encontrada
+                local_search_loop(&mut conf, config.no_impr_max, &mut rng);
+    
+                let fit = conf.evaluate(); /* Avalia para comparação */
+                                
+                (conf, fit)
+            }).collect();
 
-                if display == DisplayType::Full { conf.draw(iteration, best).await }
-            }
-            
-            // Tenta melhorar solução encontrada
-            local_search_loop(&mut conf, config.no_impr_max, display, iteration, best).await;
-
-            let fit = conf.evaluate(); /* Avalia para comparação */
-        
-            if fit > best {
-                best_conformation = conf.clone();
-                best = fit
-            }
-
-            if display == DisplayType::Ant { conf.draw(iteration, best).await }
-
-            conformations.push(conf);
-
-            println!("Energia formiga {:>2}......: {:.4}", ant, fit.to_string().green());
-        }
+        let conformations: Vec<_> = conformations_zip.into_iter()
+            .map(|(conf, fit)| {
+                if fit > best {
+                    best = fit;
+                    best_conformation = conf.clone();
+                }
+                conf
+            })
+            .collect();
 
         if display == DisplayType::Iteration { conformations[0].draw(iteration, best).await }
 
         pheromones.update(&conformations);
-
-        println!("Melhor energia até agora: {:.4}", best.to_string().cyan());
     }
 
     (best_conformation, best)
 }
 
-async fn local_search_loop(
-    conformation: &mut Conformation<'_>,
-    no_impr_max: u16,
-    display: DisplayType,
-    iteration: u16,
-    best: f64
-) {
+fn local_search_loop(conformation: &mut Conformation<'_>, no_impr_max: u16, rng: &mut ThreadRng) {
     let mut no_impr = 0;
     while no_impr < no_impr_max {
-        if conformation.local_search() {
+        if conformation.local_search(rng) {
             no_impr = 0;
-            if display == DisplayType::Full {
-                conformation.draw(iteration, best).await;
-            }
         } else {
             no_impr += 1;
         }

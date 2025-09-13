@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use rand::{distr::{weighted::WeightedIndex, Distribution}, rng, rngs::ThreadRng, seq::IndexedRandom};
+use rand::{distr::{weighted::WeightedIndex, Distribution}, rngs::ThreadRng, seq::IndexedRandom};
 
 use crate::{aco::config::ACOConfig, pheromones::Pheromones, protein::{AminoAcid, Protein}};
 
@@ -11,8 +11,7 @@ pub struct Conformation<'a> {
     protein: &'a Protein,
     conformation: Vec<Option<Direction>>,
     config: ACOConfig,
-    i: usize,
-    rng: ThreadRng
+    i: usize
 }
 
 impl<'a> Conformation<'a> {
@@ -21,8 +20,7 @@ impl<'a> Conformation<'a> {
             protein,
             conformation: vec![None; protein.len() - 2],
             config,
-            i: 0,
-            rng: rng()
+            i: 0
         }
     }
 
@@ -34,7 +32,7 @@ impl<'a> Conformation<'a> {
         self.i == self.conformation.len()
     }
 
-    pub fn grow(&mut self, pheromones: &Pheromones) -> bool {
+    pub fn grow(&mut self, pheromones: &Pheromones, rng: &mut ThreadRng) -> bool {
         if self.is_fully_grown() {
             return true;
         }
@@ -65,10 +63,10 @@ impl<'a> Conformation<'a> {
             .collect();
                 
         self.conformation[self.i] = if weights.iter().sum::<f64>() == 0.0 {
-            Some(*valid_directions.choose(&mut self.rng).unwrap())
+            Some(*valid_directions.choose(rng).unwrap())
         } else {
             let dist = WeightedIndex::new(&weights).unwrap();
-            Some(valid_directions[dist.sample(&mut self.rng)])
+            Some(valid_directions[dist.sample(rng)])
         };
 
         self.i += 1;

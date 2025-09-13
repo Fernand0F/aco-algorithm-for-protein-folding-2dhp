@@ -1,20 +1,20 @@
-use rand::{seq::SliceRandom, Rng};
+use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
 
 use crate::conformation::{Conformation, Direction};
 
 impl Conformation<'_> {
-    pub fn local_search(&mut self) -> bool {
+    pub fn local_search(&mut self, rng: &mut ThreadRng) -> bool {
         let mut improved = false;
 
-        improved = self.point_mutation() || improved;
-        improved = self.macro_mutation_neightbourhood() || improved;
+        improved = self.point_mutation(rng) || improved;
+        improved = self.macro_mutation_neightbourhood(rng) || improved;
         
         improved
     }
 
-    fn point_mutation(&mut self) -> bool {
+    fn point_mutation(&mut self, rng: &mut ThreadRng) -> bool {
         let mut indexes: Vec<usize> = (0..self.conformation.len()).collect();
-        indexes.shuffle(&mut self.rng); /* Embraralha os índices */
+        indexes.shuffle(rng); /* Embraralha os índices */
 
         let mut current_fitness = self.evaluate(); /* Pega fitness para comparação */
         let mut improved = false; /* Variável apra verificar se houve melhora */
@@ -38,7 +38,7 @@ impl Conformation<'_> {
                     current_fitness = new_fitness;
                     original_direction = self.conformation[i];
                     improved = true;
-                } else if new_fitness == current_fitness && self.rng.random::<f64>() <= self.config.neutral_mutation_rate {
+                } else if new_fitness == current_fitness && rng.random::<f64>() <= self.config.neutral_mutation_rate {
                     original_direction = self.conformation[i];
                 } else {
                     self.conformation[i] = original_direction; /* Reverte se não melhorar */
@@ -49,14 +49,14 @@ impl Conformation<'_> {
         improved
     }
 
-    fn macro_mutation_neightbourhood(&mut self) -> bool {
+    fn macro_mutation_neightbourhood(&mut self, rng: &mut ThreadRng) -> bool {
         let backup = self.conformation.clone();
         let fitness = self.evaluate();
 
         let n = self.conformation.len();
 
-        let mut i = self.rng.random_range(0..n);
-        let mut j = self.rng.random_range(0..n);
+        let mut i = rng.random_range(0..n);
+        let mut j = rng.random_range(0..n);
 
         if j < i {
             let temp = i;
@@ -68,7 +68,7 @@ impl Conformation<'_> {
             let original = self.conformation[k].unwrap();
 
             let mut new_directions: Vec<Direction> = Direction::iter().filter(|d| *d != original).collect();
-            new_directions.shuffle(&mut self.rng);
+            new_directions.shuffle(rng);
 
             self.conformation[k] = Some(new_directions[0]);
 
@@ -86,7 +86,7 @@ impl Conformation<'_> {
         if new_fitness > fitness {
             true
         } else if new_fitness == fitness {
-            if self.rng.random::<f64>() > self.config.neutral_mutation_rate {
+            if rng.random::<f64>() > self.config.neutral_mutation_rate {
                 self.conformation = backup;
             }
             false

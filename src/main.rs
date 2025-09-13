@@ -1,4 +1,4 @@
-use std::{fs::{self, OpenOptions}, io::Write};
+use std::{fs::{self, OpenOptions}, io::Write, time::Instant};
 
 use crate::{aco::{aco_protein_folding_2dhp, config::ACOConfig, DisplayType}, protein::AminoAcid};
 use macroquad::prelude::*;
@@ -13,42 +13,25 @@ async fn main() {
     let max_iter = 30;
 
     let config = ACOConfig {
-        ant_count: 20,
+        ant_count: 10,
         max_iter,
-        no_impr_max: 20,
+        no_impr_max: 10,
         evaporation: 0.9,
         alpha: 2.0,
         beta: 1.0,
         neutral_mutation_rate: 0.5
     };
 
-    // let config = ACOConfig {
-    //     ant_count: 20,
-    //     max_iter,
-    //     no_impr_max: 10,
-    //     evaporation: 0.3,
-    //     alpha: 2.0,
-    //     beta: 1.0,
-    //     neutral_mutation_rate: 0.5
-    // };
+    let (protein, _) = load_benchmark(7);
 
-    // let config = ACOConfig {
-    //     ant_count: 20,
-    //     max_iter,
-    //     no_impr_max: 20,
-    //     evaporation: 0.3,
-    //     alpha: 2.0,
-    //     beta: 3.0,
-    //     neutral_mutation_rate: 0.5
-    // };
-
-    let (protein, _) = load_benchmark(6);
-
-    let display = DisplayType::None;
+    let display = DisplayType::Ant;
 
     loop {
+        let start = Instant::now();
         let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, display).await;
-    
+        let duration = start.elapsed();
+        println!("Tempo: {:?}", duration);
+
         loop {
             conformation.draw(config.max_iter, best_found).await;
             
