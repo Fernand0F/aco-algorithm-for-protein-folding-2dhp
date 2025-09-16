@@ -71,8 +71,8 @@ fn main() {
 
                                 println!("{:?}", config);
 
-                                for _ in 0..3 { /* Roda cada um 3 vezes */
-                                    for i in 0..9 {
+                                for i in 0..9 {
+                                    for _ in 0..3 { /* Roda cada um 3 vezes */
                                         run_benchmark(i, config);
                                     }
                                 }
