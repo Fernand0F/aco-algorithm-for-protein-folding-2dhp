@@ -1,6 +1,6 @@
 use std::{fs::{self, OpenOptions}, io::Write, time::Instant};
 
-use crate::{aco::{aco_protein_folding_2dhp, config::ACOConfig, DisplayType}, protein::AminoAcid};
+use crate::{aco::{aco_protein_folding_2dhp, async_aco::async_aco_protein_folding_2dhp, config::ACOConfig, logger::{default::DefaultLogger, macroquad::MacroquadLogger}}, protein::AminoAcid};
 use macroquad::prelude::*;
 
 mod aco;
@@ -8,89 +8,91 @@ mod protein;
 mod pheromones;
 mod conformation;
 
-#[macroquad::main(window_conf)]
-async fn main() {
-    let max_iter = 30;
-
-    let config = ACOConfig {
-        ant_count: 10,
-        max_iter,
-        no_impr_max: 10,
-        evaporation: 0.9,
-        alpha: 2.0,
-        beta: 1.0,
-        neutral_mutation_rate: 0.5
-    };
-
-    let (protein, _) = load_benchmark(7);
-
-    let display = DisplayType::Ant;
-
-    loop {
-        let start = Instant::now();
-        let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, display).await;
-        let duration = start.elapsed();
-        println!("Tempo: {:?}", duration);
-
-        loop {
-            conformation.draw(config.max_iter, best_found).await;
-            
-            if is_key_pressed(KeyCode::Enter) {
-                break;
-            }
-        }
-    }
-}
-
 // #[macroquad::main(window_conf)]
-// fn main() {
-//     let ant_count = [10, 20];
-//     let no_impr_max = [10, 20];
-    
-//     // Fernando evaporação = 0.3
-//     // Ku evaporação = 0.6
-//     // Gava evaporação = 0.9
-//     let evaporation = [0.3];
+// async fn main() {
+//     let (protein, _) = load_benchmark(7);
 
-//     let alpha = [1.0, 2.0, 3.0];
-//     let beta = [1.0, 2.0, 3.0];
-//     let neutral_mutation_rate = [0.0, 0.5];
+//     let config = ACOConfig {
+//         ant_count: 20,
+//         max_iter: 30,
+//         no_impr_max: 10,
+//         evaporation: 0.8,
+//         alpha: 3.0,
+//         beta: 1.0,
+//         neutral_mutation_rate: 0.5
+//     };
 
-//     for _ in 0..100 {
-//         for ac in ant_count {
-//             for nim in no_impr_max {
-//                 for e in evaporation {
-//                     for a in alpha {
-//                         for b in beta {
-//                             for n in neutral_mutation_rate {
-//                                 let config = ACOConfig {
-//                                     ant_count: ac,
-//                                     max_iter: 75, /* fixo */
-//                                     no_impr_max: nim,
-//                                     evaporation: e,
-//                                     alpha: a,
-//                                     beta: b,
-//                                     neutral_mutation_rate: n
-//                                 };
-    
-//                                 for i in 0..9 {
-//                                     run_benchmark(i, config);
-//                                 }
-//                             }
-//                         }
-//                     }
-//                 }
-//             }    
+//     let logger = MacroquadLogger;
+
+//     loop {
+//         let start = Instant::now();
+//         let (conformation, best_found) = async_aco_protein_folding_2dhp(
+//             &protein,
+//             config,
+//             logger
+//         ).await;
+//         // let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, logger);
+//         println!("Tempo: {:?}", start.elapsed());
+
+//         loop {
+//             conformation.draw(config.max_iter, best_found).await;
+            
+//             if is_key_pressed(KeyCode::Enter) {
+//                 break;
+//             }
 //         }
 //     }
 // }
 
-async fn run_benchmark(i: usize, config: ACOConfig) {
-    let (protein, _) = load_benchmark(i);
+fn main() {
+    let ant_count = [10, 20];
+    let no_impr_max = [10, 20];
+    let evaporation = [0.5, 0.7, 0.9];
+    let alpha = [1.0, 2.0, 3.0];
+    let beta = [1.0, 2.0, 3.0];
+    let neutral_mutation_rate = [0.0, 0.5];
 
-    let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, DisplayType::None).await;
+    for _ in 0..100 {
+        for ac in ant_count {
+            for nim in no_impr_max {
+                for e in evaporation {
+                    for a in alpha {
+                        for b in beta {
+                            for n in neutral_mutation_rate {
+                                let config = ACOConfig {
+                                    ant_count: ac,
+                                    max_iter: 60, /* fixo */
+                                    no_impr_max: nim,
+                                    evaporation: e,
+                                    alpha: a,
+                                    beta: b,
+                                    neutral_mutation_rate: n
+                                };
 
-    let benchmark = format!("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
+                                println!("{:?}", config);
+
+                                for _ in 0..3 { /* Roda cada um 3 vezes */
+                                    for i in 0..9 {
+                                        run_benchmark(i, config);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }    
+        }
+    }
+}
+
+fn run_benchmark(i: usize, config: ACOConfig) {
+    let (protein, best) = load_benchmark(i);
+
+    let logger = DefaultLogger::None;
+
+    let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, logger);
+
+    let benchmark = format!("{}:{}:{}:{}:{}:{}:{}:{}:{}/{}\n",
         i,
         config.ant_count,
         config.no_impr_max,
@@ -99,7 +101,8 @@ async fn run_benchmark(i: usize, config: ACOConfig) {
         config.beta,
         config.neutral_mutation_rate,
         conformation.to_string(),
-        best_found
+        best_found,
+        best
     );
 
     let mut file = OpenOptions::new()
@@ -108,8 +111,7 @@ async fn run_benchmark(i: usize, config: ACOConfig) {
         .open("benchmark_results.txt")
         .expect("Não foi possível abrir o arquivo");
 
-    file.write_all(benchmark.as_bytes())
-        .expect("Erro ao escrever no arquivo");
+    file.write_all(benchmark.as_bytes()).expect("Erro ao escrever no arquivo");
 }
 
 fn load_benchmark(i: usize) -> (Vec<AminoAcid>, i32) {

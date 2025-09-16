@@ -2,7 +2,7 @@ use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
 
 use crate::conformation::{Conformation, Direction};
 
-impl Conformation<'_> {
+impl Conformation {
     pub fn local_search(&mut self, rng: &mut ThreadRng) -> bool {
         let mut improved = false;
 
@@ -16,7 +16,7 @@ impl Conformation<'_> {
         let mut indexes: Vec<usize> = (0..self.conformation.len()).collect();
         indexes.shuffle(rng); /* Embraralha os índices */
 
-        let mut current_fitness = self.evaluate(); /* Pega fitness para comparação */
+        let mut current_fitness = self.eval(); /* Pega fitness para comparação */
         let mut improved = false; /* Variável apra verificar se houve melhora */
 
         let directions: Vec<Direction> = Direction::vec();
@@ -32,7 +32,7 @@ impl Conformation<'_> {
                     continue;
                 }
 
-                let new_fitness = self.evaluate(); /* Faz nova avaliação */
+                let new_fitness = self.eval(); /* Faz nova avaliação */
 
                 if new_fitness > current_fitness {
                     current_fitness = new_fitness;
@@ -51,7 +51,7 @@ impl Conformation<'_> {
 
     fn macro_mutation_neightbourhood(&mut self, rng: &mut ThreadRng) -> bool {
         let backup = self.conformation.clone();
-        let fitness = self.evaluate();
+        let fitness = self.eval();
 
         let n = self.conformation.len();
 
@@ -81,7 +81,7 @@ impl Conformation<'_> {
             }
         }
 
-        let new_fitness = self.evaluate(); 
+        let new_fitness = self.eval(); 
 
         if new_fitness > fitness {
             true

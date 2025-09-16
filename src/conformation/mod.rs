@@ -7,17 +7,17 @@ pub mod display;
 pub mod local_search;
 
 #[derive(Debug, Clone)]
-pub struct Conformation<'a> {
-    protein: &'a Protein,
+pub struct Conformation {
+    protein: Protein,
     conformation: Vec<Option<Direction>>,
     config: ACOConfig,
     i: usize
 }
 
-impl<'a> Conformation<'a> {
-    pub fn new(protein: &'a Protein, config: ACOConfig) -> Self {
+impl Conformation {
+    pub fn new(protein: &Protein, config: ACOConfig) -> Self {
         Self {
-            protein,
+            protein: protein.clone(),
             conformation: vec![None; protein.len() - 2],
             config,
             i: 0
@@ -39,7 +39,7 @@ impl<'a> Conformation<'a> {
 
         let original_direction = self.conformation[self.i]; /* Salva direção para resetar em caso de erro */
         
-        let fitness = self.evaluate();
+        let fitness = self.eval();
 
         let valid_directions: Vec<Direction> = Direction::iter()
             .filter(|d| {
@@ -55,7 +55,7 @@ impl<'a> Conformation<'a> {
 
         let weights: Vec<f64> = valid_directions.iter().map(|&d| {
                 self.conformation[self.i] = Some(d);
-                let new_fitness = self.evaluate();
+                let new_fitness = self.eval();
                 let h = new_fitness - fitness + 1.0;
 
                 pheromones.get_weight(self.i, d, h)
@@ -117,7 +117,7 @@ impl<'a> Conformation<'a> {
         true
     }
 
-    pub fn evaluate(&self) -> f64 {
+    pub fn eval(&self) -> f64 {
         let mut fold = HashMap::new();
         
         // Marca aminoácidos fixos

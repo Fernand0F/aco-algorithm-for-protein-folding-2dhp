@@ -2,7 +2,7 @@ use macroquad::{shapes::{draw_circle, draw_circle_lines, draw_line}, text::draw_
 
 use crate::{conformation::Conformation, protein::AminoAcid};
 
-impl<'a> Conformation<'a> {
+impl Conformation {
     pub async fn draw(&self, iteration: u16, best: f64) {
         clear_background(macroquad::color::WHITE);
 

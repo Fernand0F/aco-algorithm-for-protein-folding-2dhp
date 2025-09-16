@@ -1,35 +1,33 @@
-use crate::{aco::config::ACOConfig, conformation::Conformation, pheromones::Pheromones, protein::Protein};
-use colored::*;
+use std::sync::{Arc, Mutex};
+
+use crate::{aco::{config::ACOConfig, logger::ACOLogger}, conformation::Conformation, pheromones::Pheromones, protein::Protein};
 use rand::{rng, rngs::ThreadRng};
-// use rayon::iter::IntoParallelIterator;
 use rayon::prelude::*;
 
 pub mod config;
+pub mod logger;
+pub mod async_aco;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum DisplayType {
-    Full,
-    Ant,
-    Iteration,
-    None
-}
-
-pub async fn aco_protein_folding_2dhp<'a>(
-    protein: &'a Protein,
+pub fn aco_protein_folding_2dhp<L>(
+    protein: &Protein,
     config: ACOConfig,
-    display: DisplayType
-) -> (Conformation<'a>, f64) {
+    logger: L
+) -> (Conformation, f64)
+where
+    L: ACOLogger + Send + Sync + 'static,
+{
     let n = protein.len();
     let mut pheromones = Pheromones::new(n - 2, config);
 
     let mut best_conformation = Conformation::new(protein, config);
     let mut best = f64::NEG_INFINITY;
 
-    for iteration in 0..config.max_iter {
-        println!("\n{}", format!("====== Iteração {:>3}/{:>3} ======", iteration + 1, config.max_iter).bright_blue().bold());
-        
+    let thread_logger = Arc::new(Mutex::new(logger));
+
+    for iteration in 0..config.max_iter {        
+        // let conformations_zip: Vec<_> = (0..config.ant_count).into_iter()
         let conformations_zip: Vec<_> = (0..config.ant_count).into_par_iter()
-            .map(|_| {
+            .map(|ant| {
                 let mut conf = Conformation::new(protein, config); /* Cria nova conformação */
                 let mut rng = rng();
 
@@ -42,11 +40,14 @@ pub async fn aco_protein_folding_2dhp<'a>(
                 // Tenta melhorar solução encontrada
                 local_search_loop(&mut conf, config.no_impr_max, &mut rng);
     
-                let fit = conf.evaluate(); /* Avalia para comparação */
+                let fit = conf.eval(); /* Avalia para comparação */
+
+                thread_logger.lock().unwrap().log_ant(config, ant, &conf, fit);
                                 
                 (conf, fit)
             }).collect();
 
+        // Atualiza melhor solução
         let conformations: Vec<_> = conformations_zip.into_iter()
             .map(|(conf, fit)| {
                 if fit > best {
@@ -57,15 +58,15 @@ pub async fn aco_protein_folding_2dhp<'a>(
             })
             .collect();
 
-        if display == DisplayType::Iteration { conformations[0].draw(iteration, best).await }
-
         pheromones.update(&conformations);
+
+        thread_logger.lock().unwrap().log_iteration(config, iteration, &best_conformation, best);
     }
 
     (best_conformation, best)
 }
 
-fn local_search_loop(conformation: &mut Conformation<'_>, no_impr_max: u16, rng: &mut ThreadRng) {
+fn local_search_loop(conformation: &mut Conformation, no_impr_max: u16, rng: &mut ThreadRng) {
     let mut no_impr = 0;
     while no_impr < no_impr_max {
         if conformation.local_search(rng) {

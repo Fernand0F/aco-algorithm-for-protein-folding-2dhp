@@ -22,7 +22,7 @@ impl Pheromones {
         self.evaporate();
 
         for conf in conformations {
-            let fitness = conf.evaluate();
+            let fitness = conf.eval();
     
             let directions = Direction::vec();
     
