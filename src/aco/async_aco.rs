@@ -8,8 +8,7 @@ pub async fn async_aco_protein_folding_2dhp(
     logger: impl AsyncACOLogger
 ) -> (Conformation, f64)
 {
-    let n = protein.len();
-    let mut pheromones = Pheromones::new(n - 2, config);
+    let mut pheromones = Pheromones::new(&protein, config);
 
     let mut best_conformation = Conformation::new(protein, config);
     let mut best = f64::NEG_INFINITY;
@@ -17,7 +16,7 @@ pub async fn async_aco_protein_folding_2dhp(
     for iteration in 0..config.max_iter {        
         let mut conformations_zip = Vec::new();
         
-        for ant in 0..config.ant_count {
+        for _ in 0..config.ant_count {
             let mut conf = Conformation::new(protein, config); /* Cria nova conformação */
             let mut rng = rng();
 

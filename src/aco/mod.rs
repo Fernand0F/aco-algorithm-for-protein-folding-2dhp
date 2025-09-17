@@ -16,8 +16,7 @@ pub fn aco_protein_folding_2dhp<L>(
 where
     L: ACOLogger + Send + Sync + 'static,
 {
-    let n = protein.len();
-    let mut pheromones = Pheromones::new(n - 2, config);
+    let mut pheromones = Pheromones::new(&protein, config);
 
     let mut best_conformation = Conformation::new(protein, config);
     let mut best = f64::NEG_INFINITY;

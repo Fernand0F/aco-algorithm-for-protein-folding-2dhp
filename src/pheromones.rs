@@ -1,16 +1,24 @@
-use crate::{aco::config::ACOConfig, conformation::{Conformation, Direction}};
+use crate::{aco::config::ACOConfig, conformation::{Conformation, Direction}, protein::{AminoAcid, Protein}};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Pheromones {
     pheromones: Vec<Vec<f64>>,
-    config: ACOConfig
+    config: ACOConfig,
+    h_count: f64
 }
 
 impl Pheromones {
-    pub fn new(n: usize, config: ACOConfig) -> Self {
+    pub fn new(protein: &Protein, config: ACOConfig) -> Self {
+        let n = protein.len() - 2;
+
+        let h_count = protein.iter()
+            .filter(|&&aa| aa == AminoAcid::Hydrophobic)
+            .count() as f64;
+
         Self {
             pheromones: vec![vec![0.5; 3]; n],
-            config
+            config,
+            h_count
         }
     }
 
@@ -30,8 +38,12 @@ impl Pheromones {
                 for didx in 0..line.len() {
                     let dir = directions[didx];
     
-                    let delta = if dir == conf.get(i).unwrap() { fitness } else { 0.0 };
-    
+                    let delta = if dir == conf.get(i).unwrap() {
+                        fitness / self.h_count
+                    } else {
+                        0.0
+                    };
+
                     line[didx] += delta;
                 }
             }
