@@ -1,9 +1,9 @@
 use macroquad::{shapes::{draw_circle, draw_circle_lines, draw_line}, text::draw_text, window::{clear_background, next_frame, screen_height, screen_width}};
 
-use crate::{conformation::Conformation, protein::AminoAcid};
+use crate::{conformation::Conformation, pheromones::Pheromones, protein::AminoAcid};
 
 impl Conformation {
-    pub async fn draw(&self, iteration: u16, best: f64) {
+    pub async fn draw(&self, iteration: u16, best: f64, pheromones: Option<&Pheromones>) {
         clear_background(macroquad::color::WHITE);
 
         draw_text(&format!("Iteração: {}", iteration), 10.0, 25.0, 30.0, macroquad::color::BLACK);
@@ -12,7 +12,7 @@ impl Conformation {
         let mut loc = (1, 0); /* Inicializa posição do agente */
         let mut v = (1, 0);   /* Inicializa velocidade do agente */
 
-        let scale = 15.0;
+        let scale = 30.0;
         let screen_center = (screen_width() / 2.0, screen_height() / 2.0);
         let multi = 0.3; /* Tamanho dos círculos */
 
@@ -35,6 +35,8 @@ impl Conformation {
                 loc = new_loc;
             }
         }
+
+        pheromones.map(|p| p.draw());
 
         next_frame().await;
     }

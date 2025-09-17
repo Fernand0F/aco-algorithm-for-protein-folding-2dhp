@@ -1,4 +1,4 @@
-use crate::{aco::config::ACOConfig, conformation::Conformation};
+use crate::{aco::config::ACOConfig, conformation::Conformation, pheromones::Pheromones};
 
 pub mod default;
 pub mod macroquad;
@@ -9,7 +9,30 @@ pub trait ACOLogger: Clone + Copy {
 }
 
 pub trait AsyncACOLogger: Clone + Copy {
-    async fn log_iteration(&self, config: ACOConfig, iter: u16, conformation: &Conformation, fit: f64);
-    async fn log_ant(&self, config: ACOConfig, iter: u16, conformation: &Conformation, fit: f64);
-    async fn log_change(&self, config: ACOConfig, iter: u16, conformation: &Conformation, fit: f64);
+    async fn log_iteration(
+        &self,
+        config: ACOConfig,
+        iter: u16,
+        conformation: &Conformation,
+        fit: f64,
+        pheromones: &Pheromones
+    );
+    
+    async fn log_ant(
+        &self,
+        config: ACOConfig,
+        iter: u16,
+        conformation: &Conformation,
+        fit: f64,
+        pheromones: &Pheromones
+    );
+
+    async fn log_change(
+        &self,
+        config: ACOConfig,
+        iter: u16,
+        conformation: &Conformation,
+        fit: f64,
+        pheromones: &Pheromones
+    );
 }

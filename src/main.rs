@@ -10,32 +10,29 @@ mod conformation;
 
 // #[macroquad::main(window_conf)]
 // async fn main() {
-//     let (protein, _) = load_benchmark(7);
+//     let (protein, _) = load_benchmark(1);
 
 //     let config = ACOConfig {
 //         ant_count: 20,
-//         max_iter: 30,
+//         max_iter: 60,
 //         no_impr_max: 10,
-//         evaporation: 0.8,
+//         evaporation: 0.9,
 //         alpha: 3.0,
-//         beta: 1.0,
+//         beta: 3.0,
 //         neutral_mutation_rate: 0.5
 //     };
 
-//     let logger = MacroquadLogger;
+//     let logger = DefaultLogger::Iteration;
 
 //     loop {
 //         let start = Instant::now();
-//         let (conformation, best_found) = async_aco_protein_folding_2dhp(
-//             &protein,
-//             config,
-//             logger
-//         ).await;
-//         // let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, logger);
+
+//         let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, logger);
+        
 //         println!("Tempo: {:?}", start.elapsed());
 
 //         loop {
-//             conformation.draw(config.max_iter, best_found).await;
+//             conformation.draw(config.max_iter, best_found, None).await;
             
 //             if is_key_pressed(KeyCode::Enter) {
 //                 break;
@@ -45,47 +42,129 @@ mod conformation;
 // }
 
 fn main() {
-    let ant_count = [10, 20];
-    let no_impr_max = [10, 20];
-    let evaporation = [0.5, 0.7, 0.9];
-    let alpha = [1.0, 2.0, 3.0];
-    let beta = [1.0, 2.0, 3.0];
-    let neutral_mutation_rate = [0.0, 0.5];
+    let max_iter = 75;
 
-    for _ in 0..100 {
-        for ac in ant_count {
-            for nim in no_impr_max {
-                for e in evaporation {
-                    for a in alpha {
-                        for b in beta {
-                            for n in neutral_mutation_rate {
-                                let config = ACOConfig {
-                                    ant_count: ac,
-                                    max_iter: 60, /* fixo */
-                                    no_impr_max: nim,
-                                    evaporation: e,
-                                    alpha: a,
-                                    beta: b,
-                                    neutral_mutation_rate: n
-                                };
+    let configs = [
+        ACOConfig {
+            ant_count: 20,
+            max_iter,
+            no_impr_max: 20,
+            evaporation: 0.9,
+            alpha: 1.0,
+            beta: 2.0,
+            neutral_mutation_rate: 0.5
+        },
+        ACOConfig {
+            ant_count: 20,
+            max_iter,
+            no_impr_max: 20,
+            evaporation: 0.9,
+            alpha: 1.0,
+            beta: 1.0,
+            neutral_mutation_rate: 0.5
+        },
+        ACOConfig {
+            ant_count: 20,
+            max_iter,
+            no_impr_max: 20,
+            evaporation: 0.9,
+            alpha: 1.0,
+            beta: 3.0,
+            neutral_mutation_rate: 0.5
+        },
+        ACOConfig {
+            ant_count: 20,
+            max_iter,
+            no_impr_max: 20,
+            evaporation: 0.5,
+            alpha: 1.0,
+            beta: 1.0,
+            neutral_mutation_rate: 0.5
+        },
+        ACOConfig {
+            ant_count: 20,
+            max_iter,
+            no_impr_max: 20,
+            evaporation: 0.5,
+            alpha: 1.0,
+            beta: 2.0,
+            neutral_mutation_rate: 0.5
+        },
+        ACOConfig { /* Quantidade de formigas aumentada */
+            ant_count: 40,
+            max_iter,
+            no_impr_max: 20,
+            evaporation: 0.9,
+            alpha: 1.0,
+            beta: 2.0,
+            neutral_mutation_rate: 0.5
+        },
+        ACOConfig { /* NoInprMax aumentado */
+            ant_count: 20,
+            max_iter,
+            no_impr_max: 40,
+            evaporation: 0.9,
+            alpha: 1.0,
+            beta: 2.0,
+            neutral_mutation_rate: 0.5
+        },
+    ];
 
-                                println!("{:?}", config);
+    loop {
+        for config in configs {
+            println!("{:?}", config);
 
-                                for i in 0..9 {
-                                    for _ in 0..3 { /* Roda cada um 3 vezes */
-                                        run_benchmark(i, config);
-                                    }
-                                }
-                            }
-                        }
-                    }
+            for i in 0..9 {
+                for _ in 0..3 { /* Roda cada um 3 vezes */
+                    run_benchmark(i, config, "benchmark_results_melhores_configs.txt");
                 }
-            }    
+            }
         }
     }
 }
 
-fn run_benchmark(i: usize, config: ACOConfig) {
+// fn main() {
+//     let ant_count = [10, 20];
+//     let no_impr_max = [10, 20];
+//     let evaporation = [0.5, 0.7, 0.9];
+//     let alpha = [1.0, 2.0, 3.0];
+//     let beta = [1.0, 2.0, 3.0];
+//     let neutral_mutation_rate = [0.0, 0.5];
+
+//     for _ in 0..100 {
+//         for ac in ant_count {
+//             for nim in no_impr_max {
+//                 for e in evaporation {
+//                     for a in alpha {
+//                         for b in beta {
+//                             for n in neutral_mutation_rate {
+//                                 let config = ACOConfig {
+//                                     ant_count: ac,
+//                                     max_iter: 60, /* fixo */
+//                                     no_impr_max: nim,
+//                                     evaporation: e,
+//                                     alpha: a,
+//                                     beta: b,
+//                                     neutral_mutation_rate: n
+//                                 };
+
+//                                 println!("{:?}", config);
+
+//                                 for i in 0..9 {
+//                                     for _ in 0..3 { /* Roda cada um 3 vezes */
+//                                         run_benchmark(i, config);
+//                                     }
+//                                 }
+//                             }
+//                         }
+//                     }
+//                 }
+//             }    
+//         }
+//     }
+// }
+
+fn run_benchmark(i: usize, config: ACOConfig, out_file_name: &str) {
     let (protein, best) = load_benchmark(i);
 
     let logger = DefaultLogger::None;
@@ -108,7 +187,7 @@ fn run_benchmark(i: usize, config: ACOConfig) {
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("benchmark_results.txt")
+        .open(out_file_name)
         .expect("Não foi possível abrir o arquivo");
 
     file.write_all(benchmark.as_bytes()).expect("Erro ao escrever no arquivo");

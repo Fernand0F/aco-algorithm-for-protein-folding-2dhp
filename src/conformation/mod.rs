@@ -9,9 +9,9 @@ pub mod local_search;
 #[derive(Debug, Clone)]
 pub struct Conformation {
     protein: Protein,
-    conformation: Vec<Option<Direction>>,
+    pub conformation: Vec<Option<Direction>>,
     config: ACOConfig,
-    i: usize
+    pub i: usize
 }
 
 impl Conformation {
@@ -195,8 +195,8 @@ pub enum Direction {
 impl Direction {
     pub fn as_index(&self) -> usize {
         match self {
-            Direction::Straight => 0,
-            Direction::Left => 1,
+            Direction::Left => 0,
+            Direction::Straight => 1,
             Direction::Right => 2
         }
     }

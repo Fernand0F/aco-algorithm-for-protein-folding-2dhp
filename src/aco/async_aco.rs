@@ -24,7 +24,7 @@ pub async fn async_aco_protein_folding_2dhp(
                 if !conf.grow(&pheromones, &mut rng) {
                     conf.rewind();
                 }
-                // logger.log_change(config, iteration, &conf, best).await;
+                logger.log_change(config, iteration, &conf, best, &pheromones).await;
             }
             
             // Tenta melhorar solução encontrada
@@ -32,7 +32,7 @@ pub async fn async_aco_protein_folding_2dhp(
 
             let fit = conf.eval(); /* Avalia para comparação */
 
-            logger.log_ant(config, iteration, &conf, best).await;
+            logger.log_ant(config, iteration, &conf, best, &pheromones).await;
 
             conformations_zip.push((conf, fit));
         };
@@ -50,7 +50,7 @@ pub async fn async_aco_protein_folding_2dhp(
 
         pheromones.update(&conformations);
 
-        logger.log_iteration(config, iteration, &best_conformation, best).await;
+        logger.log_iteration(config, iteration, &best_conformation, best, &pheromones).await;
     }
 
     (best_conformation, best)
