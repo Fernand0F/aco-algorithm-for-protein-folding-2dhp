@@ -1,6 +1,6 @@
 use rand::{rng, rngs::ThreadRng};
 
-use crate::{aco::{config::ACOConfig, logger::AsyncACOLogger}, conformation::Conformation, pheromones::Pheromones, protein::Protein};
+use crate::{aco::{config::ACOConfig, logger::AsyncACOLogger}, conformation::Conformation, pheromones::{self, Pheromones}, protein::Protein};
 
 pub async fn async_aco_protein_folding_2dhp(
     protein: &Protein,
@@ -28,7 +28,7 @@ pub async fn async_aco_protein_folding_2dhp(
             }
             
             // Tenta melhorar solução encontrada
-            local_search_loop(&mut conf, config.no_impr_max, &mut rng, logger).await;
+            local_search_loop(&mut conf, config.no_impr_max, &mut rng, logger, config, iteration, best, &pheromones).await;
 
             let fit = conf.eval(); /* Avalia para comparação */
 
@@ -60,7 +60,11 @@ async fn local_search_loop(
     conformation: &mut Conformation,
     no_impr_max: u16,
     rng: &mut ThreadRng,
-    _: impl AsyncACOLogger
+    logger: impl AsyncACOLogger,
+    config: ACOConfig,
+    iter: u16,
+    best: f64,
+    pheromones: &Pheromones,
 ) {
     let mut no_impr = 0;
     while no_impr < no_impr_max {
@@ -69,6 +73,6 @@ async fn local_search_loop(
         } else {
             no_impr += 1;
         }
-        // logger.log_change(config, iter, conformation, fit)
+        logger.log_change(config, iter, conformation, best, pheromones).await;
     }
 }

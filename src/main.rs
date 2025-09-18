@@ -8,120 +8,120 @@ mod protein;
 mod pheromones;
 mod conformation;
 
-// #[macroquad::main(window_conf)]
-// async fn main() {
-//     let (protein, _) = load_benchmark(1);
+#[macroquad::main(window_conf)]
+async fn main() {
+    let (protein, _) = load_benchmark(3);
 
-//     let config = ACOConfig {
-//         ant_count: 20,
-//         max_iter: 60,
-//         no_impr_max: 10,
-//         evaporation: 0.9,
-//         alpha: 3.0,
-//         beta: 3.0,
-//         neutral_mutation_rate: 0.5
-//     };
+    let config = ACOConfig {
+        ant_count: 20,
+        max_iter: 25,
+        no_impr_max: 20,
+        evaporation: 0.9,
+        alpha: 1.0,
+        beta: 2.0,
+        neutral_mutation_rate: 0.5
+    };
 
-//     let logger = DefaultLogger::Iteration;
-
-//     loop {
-//         let start = Instant::now();
-
-//         let (conformation, best_found) = aco_protein_folding_2dhp(&protein, config, logger);
-        
-//         println!("Tempo: {:?}", start.elapsed());
-
-//         loop {
-//             conformation.draw(config.max_iter, best_found, None).await;
-            
-//             if is_key_pressed(KeyCode::Enter) {
-//                 break;
-//             }
-//         }
-//     }
-// }
-
-fn main() {
-    let max_iter = 75;
-
-    let configs = [
-        ACOConfig {
-            ant_count: 20,
-            max_iter,
-            no_impr_max: 20,
-            evaporation: 0.9,
-            alpha: 1.0,
-            beta: 2.0,
-            neutral_mutation_rate: 0.5
-        },
-        ACOConfig {
-            ant_count: 20,
-            max_iter,
-            no_impr_max: 20,
-            evaporation: 0.9,
-            alpha: 1.0,
-            beta: 1.0,
-            neutral_mutation_rate: 0.5
-        },
-        ACOConfig {
-            ant_count: 20,
-            max_iter,
-            no_impr_max: 20,
-            evaporation: 0.9,
-            alpha: 1.0,
-            beta: 3.0,
-            neutral_mutation_rate: 0.5
-        },
-        ACOConfig {
-            ant_count: 20,
-            max_iter,
-            no_impr_max: 20,
-            evaporation: 0.5,
-            alpha: 1.0,
-            beta: 1.0,
-            neutral_mutation_rate: 0.5
-        },
-        ACOConfig {
-            ant_count: 20,
-            max_iter,
-            no_impr_max: 20,
-            evaporation: 0.5,
-            alpha: 1.0,
-            beta: 2.0,
-            neutral_mutation_rate: 0.5
-        },
-        ACOConfig { /* Quantidade de formigas aumentada */
-            ant_count: 40,
-            max_iter,
-            no_impr_max: 20,
-            evaporation: 0.9,
-            alpha: 1.0,
-            beta: 2.0,
-            neutral_mutation_rate: 0.5
-        },
-        ACOConfig { /* NoInprMax aumentado */
-            ant_count: 20,
-            max_iter,
-            no_impr_max: 40,
-            evaporation: 0.9,
-            alpha: 1.0,
-            beta: 2.0,
-            neutral_mutation_rate: 0.5
-        },
-    ];
+    let logger = MacroquadLogger::Change;
 
     loop {
-        for config in configs {
-            println!("{:?}", config);
+        let start = Instant::now();
 
-            for i in 0..9 {
-                for _ in 0..3 { /* Roda cada um 3 vezes */
-                    run_benchmark(i, config, "benchmark_results_melhores_configs.txt");
-                }
+        let (conformation, best_found) = async_aco_protein_folding_2dhp(&protein, config, logger).await;
+        
+        println!("Tempo: {:?}", start.elapsed());
+
+        loop {
+            conformation.draw(config.max_iter, best_found, None).await;
+            
+            if is_key_pressed(KeyCode::Enter) {
+                break;
             }
         }
     }
 }
+
+// fn main() {
+//     let max_iter = 75;
+
+//     let configs = [
+//         ACOConfig {
+//             ant_count: 20,
+//             max_iter,
+//             no_impr_max: 20,
+//             evaporation: 0.9,
+//             alpha: 1.0,
+//             beta: 2.0,
+//             neutral_mutation_rate: 0.5
+//         },
+//         ACOConfig {
+//             ant_count: 20,
+//             max_iter,
+//             no_impr_max: 20,
+//             evaporation: 0.9,
+//             alpha: 1.0,
+//             beta: 1.0,
+//             neutral_mutation_rate: 0.5
+//         },
+//         ACOConfig {
+//             ant_count: 20,
+//             max_iter,
+//             no_impr_max: 20,
+//             evaporation: 0.9,
+//             alpha: 1.0,
+//             beta: 3.0,
+//             neutral_mutation_rate: 0.5
+//         },
+//         ACOConfig {
+//             ant_count: 20,
+//             max_iter,
+//             no_impr_max: 20,
+//             evaporation: 0.5,
+//             alpha: 1.0,
+//             beta: 1.0,
+//             neutral_mutation_rate: 0.5
+//         },
+//         ACOConfig {
+//             ant_count: 20,
+//             max_iter,
+//             no_impr_max: 20,
+//             evaporation: 0.5,
+//             alpha: 1.0,
+//             beta: 2.0,
+//             neutral_mutation_rate: 0.5
+//         },
+//         ACOConfig { /* Quantidade de formigas aumentada */
+//             ant_count: 40,
+//             max_iter,
+//             no_impr_max: 20,
+//             evaporation: 0.9,
+//             alpha: 1.0,
+//             beta: 2.0,
+//             neutral_mutation_rate: 0.5
+//         },
+//         ACOConfig { /* NoInprMax aumentado */
+//             ant_count: 20,
+//             max_iter,
+//             no_impr_max: 40,
+//             evaporation: 0.9,
+//             alpha: 1.0,
+//             beta: 2.0,
+//             neutral_mutation_rate: 0.5
+//         },
+//     ];
+
+//     loop {
+//         for config in configs {
+//             println!("{:?}", config);
+
+//             for i in 0..9 {
+//                 for _ in 0..3 { /* Roda cada um 3 vezes */
+//                     run_benchmark(i, config, "benchmark_results_melhores_configs.txt");
+//                 }
+//             }
+//         }
+//     }
+// }
 
 // fn main() {
 //     let ant_count = [10, 20];

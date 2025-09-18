@@ -12,7 +12,7 @@ impl Conformation {
         let mut loc = (1, 0); /* Inicializa posição do agente */
         let mut v = (1, 0);   /* Inicializa velocidade do agente */
 
-        let scale = 30.0;
+        let scale = 17.0;
         let screen_center = (screen_width() / 2.0, screen_height() / 2.0);
         let multi = 0.3; /* Tamanho dos círculos */
 
